@@ -1,45 +1,29 @@
-name: build_and_test   # 🔹 Workflow'un ismi (GitHub Actions sekmesinde bu görünür)
+name: build_and_test
 
-on:                    # 🔹 Ne zaman çalışacağını belirler
-  push:                # Her 'push' olayında
-    branches: [ "main" ]   # Sadece 'main' branch'e push yapıldığında
+on:
+  push:
+    branches: [ "main" ]
 
-jobs:                  # 🔹 Çalışacak işler (birden fazla olabilir)
-  test:                # Burada bir 'test' işi tanımlıyoruz
-    runs-on: ubuntu-latest   # GitHub'un çalıştıracağı sanal sistem (Ubuntu)
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
-    steps:             # Adım adım yapılacaklar
-      - uses: actions/checkout@v4   # 1️⃣ Reponun kodunu indir
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup PHP            # 2️⃣ PHP kur
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
-     - name: Start PHP server
-  run: php -S 127.0.0.1:8000 -t public >/dev/null 2>&1 &
+      - name: Start PHP server
+        run: php -S 127.0.0.1:8000 -t public >/dev/null 2>&1 &
 
-
-
-      - name: Make tests executable # 4️⃣ Test dosyasını çalıştırılabilir hale getir
+      - name: Make tests executable
         run: chmod +x tests/integration.sh
 
-      - name: Run integration tests # 5️⃣ Testleri çalıştır
+      - name: Run integration tests
         env:
           BASE: http://127.0.0.1:8000
         run: ./tests/integration.sh
-
-  deploy:               # 🔹 (Opsiyonel) Deploy işi
-    needs: test         # 🔹 Sadece testler başarılı olursa çalışır
-    if: success()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger deploy (optional)
-        env:
-          HOOK: ${{ secrets.DEPLOY_HOOK_URL }}
-        run: |
-          if [ -n "$HOOK" ]; then
-            curl -X POST "$HOOK"
-          else
-            echo "No deploy hook configured. Skipping deploy."
-          fi
