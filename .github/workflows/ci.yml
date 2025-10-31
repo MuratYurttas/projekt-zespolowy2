@@ -18,8 +18,10 @@ jobs:
           php-version: '8.2'
 
       - name: Start PHP server
-        run: php -S 127.0.0.1:8000 -t public >/dev/null 2>&1 &
+  run: php -S 127.0.0.1:8000 -t public >/dev/null 2>&1 &
 
+       - name: Wait for server to start
+  run: sleep 5
       - name: Make tests executable
         run: chmod +x tests/integration.sh
 
