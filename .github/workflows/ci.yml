@@ -1,0 +1,28 @@
+name: build_and_test
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Start PHP server
+        run: php -S 127.0.0.1:8000 -t . >/dev/null 2>&1 &
+
+      - name: Make tests executable
+        run: chmod +x tests/integration.sh
+
+      - name: Run integration tests
+        env:
+          BASE: http://127.0.0.1:8000
+        run: ./tests/integration.sh

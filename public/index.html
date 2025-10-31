@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Walidacja formularza</title>
+  <script>
+    function validateForm(e){
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const price = Number(document.getElementById("price").value);
+      const birth = document.getElementById("birthDate").value;
+      const today = new Date().toISOString().split("T")[0];
+      let errs = [];
+      if (name.length < 3 || name.length > 50) errs.push("Imię: 3–50 znaków.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.push("Niepoprawny email.");
+      if (!(price > 0)) errs.push("Cena musi być > 0.");
+      if (birth > today) errs.push("Data urodzenia nie może być w przyszłości.");
+      if (errs.length){ alert(errs.join("\n")); e.preventDefault(); }
+    }
+  </script>
+</head>
+<body>
+  <h2>Formularz</h2>
+  <form action="../api/submit.php" method="POST" onsubmit="validateForm(event)">
+    <label>Imię: <input id="name" name="name" required></label><br>
+    <label>Email: <input id="email" name="email" required></label><br>
+    <label>Cena: <input id="price" name="price" type="number" required></label><br>
+    <label>Data urodzenia: <input id="birthDate" name="birthDate" type="date" required></label><br>
+    <label>Kod: <input id="code" name="code" pattern="[A-Za-z0-9-]{4,20}" required></label><br>
+    <button type="submit">Wyślij</button>
+  </form>
+</body>
+</html>
