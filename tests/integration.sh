@@ -1,8 +1,10 @@
 #!/bin/bash
 set +e
 
+AUTH_HEADER="Authorization: Bearer SECRET123"
+
 echo "1) Bad payload → 400"
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -d '{"name":""}')
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -H "$AUTH_HEADER" -d '{"name":""}')
 if [ "$STATUS" -eq 400 ]; then
   echo "✅ Test 1 passed (expected 400, got $STATUS)"
 else
@@ -11,7 +13,7 @@ else
 fi
 
 echo "2) Duplicate entry → 409 (optional)"
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -d '{"name":"Test","email":"test@test.com","price":10,"birthDate":"2000-01-01","code":"AA11"}')
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -H "$AUTH_HEADER" -d '{"name":"Test","email":"test@test.com","price":10,"birthDate":"2000-01-01","code":"AA11"}')
 if [ "$STATUS" -eq 409 ]; then
   echo "✅ Test 2 passed (expected 409, got $STATUS)"
 else
@@ -19,7 +21,7 @@ else
 fi
 
 echo "3) Not found → 404"
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/notexists.php")
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/notexists.php" -H "$AUTH_HEADER")
 if [ "$STATUS" -eq 404 ]; then
   echo "✅ Test 3 passed (expected 404, got $STATUS)"
 else
