@@ -27,5 +27,14 @@ else
   exit 1
 fi
 
+echo "4) No token → 401/403"
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -d '{"name":"Test"}')
+if [ "$STATUS" -eq 401 ] || [ "$STATUS" -eq 403 ]; then
+  echo "✅ Test 4 passed (expected 401/403, got $STATUS)"
+else
+  echo "❌ Test 4 failed (expected 401/403, got $STATUS)"
+  exit 1
+fi
+
 echo "🎉 All integration tests completed successfully!"
-exit 0 
+exit 0
