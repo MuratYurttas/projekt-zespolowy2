@@ -10,12 +10,13 @@ else
   exit 1
 fi
 
-echo "2) Duplicate entry → 409 (optional)"
+echo "2) Duplicate entry → 409"
 STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/submit.php" -H "Content-Type: application/json" -d '{"name":"Test","email":"test@test.com","price":10,"birthDate":"2000-01-01","code":"AA11"}')
 if [ "$STATUS" -eq 409 ]; then
   echo "✅ Test 2 passed (expected 409, got $STATUS)"
 else
-  echo "⚠️ Test 2 skipped or not implemented (got $STATUS)"
+  echo "❌ Test 2 failed (expected 409, got $STATUS)"
+  exit 1
 fi
 
 echo "3) Not found → 404"
