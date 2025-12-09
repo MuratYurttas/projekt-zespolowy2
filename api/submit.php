@@ -1,22 +1,24 @@
 <?php
 require __DIR__ . "/_lib.php";
 
-// 🔐 Token kontrolü
-$headers = getallheaders();
-$auth = $headers['Authorization'] ?? '';
+// 🔐 Token kontrolü — sadece GitHub Actions için aktif
+if (!isset($_SERVER['HTTP_HOST']) || $_SERVER['HTTP_HOST'] !== 'localhost') {
+    $headers = getallheaders();
+    $auth = $headers['Authorization'] ?? '';
 
-if ($auth !== 'Bearer SECRET123') {
-  json_response(401, [
-    "error" => "Brak tokena lub niepoprawny token",
-    "code" => "UNAUTHORIZED"
-  ]);
-  exit;
+    if ($auth !== 'Bearer SECRET123') {
+        json_response(401, [
+            "error" => "Brak tokena lub niepoprawny token",
+            "code" => "UNAUTHORIZED"
+        ]);
+        exit;
+    }
 }
 
 $data = $_POST;
 $errors = [];
 
-// 🧩 Walidacja pól (validation)
+// 🔎 Walidacja pól
 if (!isset($data["name"]) || strlen(trim($data["name"])) < 3 || strlen(trim($data["name"])) > 50)
   $errors[] = field_error("name", "INVALID_LENGTH", "Imię: 3–50 znaków.");
 
@@ -32,15 +34,20 @@ if (!isset($data["birthDate"]) || ($data["birthDate"] > date("Y-m-d")))
 if (!isset($data["code"]) || !preg_match('/^[A-Za-z0-9-]{4,20}$/', $data["code"]))
   $errors[] = field_error("code", "INVALID_FORMAT", "Kod 4–20, litery/cyfry/myślnik");
 
-if ($errors) {
+// ✅ Eğer password varsa → HASH'le
+if (isset($data["password"]) && strlen($data["password"]) > 0) {
+  $data["password"] = password_hash($data["password"], PASSWORD_DEFAULT);
+}
+
+if ($errors){
   json_response(400, error_format(400, $errors));
   exit;
 }
 
-// 🔄 Sprawdzenie duplikatów (duplicate check)
+// 🔁 Duplikat kontrolü
 $db = load_db();
-foreach ($db as $row) {
-  if ($row["email"] === $data["email"] || $row["code"] === $data["code"]) {
+foreach($db as $row){
+  if ($row["email"] === $data["email"] || $row["code"] === $data["code"]){
     json_response(409, error_format(409, [
       field_error("email", "DUPLICATE", "Duplikat danych")
     ]));
@@ -48,15 +55,22 @@ foreach ($db as $row) {
   }
 }
 
-// 💾 Zapis do bazy
-$db[] = [
+// 💾 Kayıt
+$record = [
   "name" => trim($data["name"]),
   "email" => $data["email"],
   "price" => 0 + $data["price"],
   "birthDate" => $data["birthDate"],
   "code" => $data["code"]
 ];
+
+// ✅ Eğer password geldiyse DB’ye ekle
+if (isset($data["password"])) {
+  $record["password"] = $data["password"];
+}
+
+$db[] = $record;
 save_db($db);
 
-// ✅ Sukces
+// ✅ Başarılı
 json_response(201, ["message" => "Created"]);
